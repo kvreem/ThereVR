@@ -1,0 +1,2 @@
+export OPENNI2_INCLUDE=/Users/michael.edgcumbe/Documents/XCode/Raw/OpenNI-MacOSX-x64-2.2/Include
+export OPENNI2_REDIST=/Users/michael.edgcumbe/Documents/XCode/Raw/OpenNI-MacOSX-x64-2.2/Redist

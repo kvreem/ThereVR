@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Hello World!</title>
+  </head>
+  <body>
+    <webview id="sc" src="http://localhost:8000/" preload="./sc.js" style="position: absolute; top: 0; left: 0; bottom: 0; right: 0;"></webview>
+    <script>
+      var sc = document.getElementById("sc");
+      sc.addEventListener('dom-ready', () => {
+        sc.openDevTools();
+      });
+      console.log(sc);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,71 @@
+#!python
+import glob
+import os
+
+#get all the build variables we need
+Import('env', 'project', 'build_config')
+local_env = env.Clone()
+
+build_root = '../build'                 #root of the build directory tree
+build_dir = build_root + '/' + project   #build directory for this project
+target_path = build_dir + '/' + project  #path to the exec in the build directory
+
+#specify the build directory
+local_env.VariantDir(build_dir, ".")
+
+# g++ -I/usr/local/Cellar/opencv/2.4.12/include/opencv -I/usr/local/Cellar/opencv/2.4.12/include -L/usr/local/Cellar/opencv/2.4.12/lib  -lopencv_core -lopencv_highgui main.cpp -o opencv
+
+compile_time_flags = [
+    '-D __BUILD_CONFIG=' + str(build_config),
+    '-Wall',
+]
+
+libs = [
+    'opencv_imgcodecs',
+    'opencv_core',
+    'opencv_highgui',
+    'm',
+    'dl',
+    'stdc++'
+]
+
+lib_path = [
+    '/usr/local/lib'
+]
+
+cpp_paths = [
+    '/usr/local/include/opencv',
+    '/usr/local/include',
+]
+
+source_folders = [
+    '.',
+]
+
+# Build our source file list
+src_list = []
+
+BASE_DIR = os.path.abspath('.')
+for folder in source_folders:
+    folder_abs_path = os.path.abspath(folder)
+    os.chdir(folder_abs_path)
+    if folder == '.':
+        src_list += map(lambda x: build_dir + '/' + x, glob.glob('*.cpp'))
+    else:
+        src_list += map(lambda x: build_dir + '/' + folder + x, glob.glob('*.cpp'))
+    os.chdir(BASE_DIR)
+
+# Setup compile time flags in environment
+local_env.Append(CPPFLAGS = compile_time_flags)
+
+# Setup library search path in environment
+local_env.Append(LIBPATH = lib_path)
+
+# Setup libs in environment
+local_env.Append(LIBS = libs)
+
+# Setup header search path
+local_env.Append(CPPPATH = cpp_paths)
+
+# Target source files in environment
+local_env.Program(target_path, source=src_list)

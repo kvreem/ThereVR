@@ -1,0 +1,19 @@
+{
+  "name": "therenect",
+  "version": "1.0.0",
+  "description": "",
+  "main": "therenect.js",
+  "private": true,
+  "scripts": {
+    "build": "HOME=~/.electron-gyp node-gyp rebuild --target=1.6.6 --arch=x64 --dist-url=https://atom.io/download/electron",
+    "test": "node therenect.js",
+    "install": "node-gyp rebuild"
+  },
+  "author": "",
+  "gypfile": true,
+  "dependencies": {
+    "nan": "^2.6.2",
+    "pngjs": "^3.0.0",
+    "primus": "^6.0.5"
+  }
+}

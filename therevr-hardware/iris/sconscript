@@ -1,0 +1,137 @@
+#!python
+import glob
+import os
+
+# get all the build variables we need
+Import('env', 'project', 'build_config', 'opencv_includes', 'opencv_lib_paths')
+local_env = env.Clone()
+
+build_root = '../build'                 #root of the build directory tree
+build_dir = build_root + '/' + project  #build directory for this project
+target_path = build_dir + '/' + project #path to the exec in the build directory
+
+############
+# CREATE ENVIRONMENT CONSTRUCTION VARIABLES
+# Construction varibles define how and what is built within an environemnt
+# 
+# List of used construction variables:
+# compile_tflags user-specified C preprocessor options
+# libs           list libraries that is linked w/ executable programs created
+# lib_path       list of dir that will be searched for libs
+# cpp_paths      list of dir that the C preprocessor will search for include dir
+# src_folders    list of folders that have src files
+# ignore_files   list of files to ignore from src_folders
+############
+compile_tflags = []
+libs = [] 
+lib_path = []
+cpp_paths = []
+src_folders = []
+pkg_config_commands = []
+
+lib_path += opencv_lib_paths # OpenCV lib found in SConstruct
+cpp_paths += opencv_includes # OpenCV paths found in SConstruct
+
+# specify the build directory
+local_env.VariantDir(build_dir, ".", duplicate=0)
+
+if build_config == 0:               # Linux specific libs
+    pkg_config_commands += [
+        # Bluetooth Dependencies
+        'pkg-config --cflags --libs glib-2.0',
+        'pkg-config --cflags --libs dbus-1']
+
+    libs += [
+        # OpenCV specific Libraries
+        'opencv_imgcodecs',]
+
+    lib_path += []
+elif build_config == 1:             # Mac specific libs
+    pass
+
+compile_tflags += [
+    '-D __BUILD_CONFIG=' + str(build_config),
+    '-Wall',
+]
+
+libs += [
+    'opencv_core',
+    'opencv_imgproc',
+    'opencv_highgui',
+    'opencv_videoio',
+    'm',
+    'dl',
+    'stdc++',
+]
+
+lib_path += [
+]
+
+cpp_paths += [
+    '.',
+    'L0_LowLevel/',
+    'L0_LowLevel/gdbus/',
+    'L1_Utils/',
+    'L2_IO',
+    'L2_IO/bluetooth/',
+    'L3_Application/'
+]
+
+src_folders += [
+    '.',
+    'L0_LowLevel/gdbus/src',
+    'L1_Utils/src',
+    'L2_IO/bluetooth/src',
+    'L3_Application/',
+    'L3_Application/src',
+]
+
+ignore_files = [
+]
+
+############
+# GRAB SOURCE FILES
+# Grab all of the source files within the project which is found by
+# looking at the dirs in src_folders
+############
+src_list = []
+BASE_DIR = os.path.abspath('.')
+ext_array = ['*.cpp', '*.c']
+
+def glob_for_extensions(ext_array, folder):
+    results = []
+    for ext in ext_array:
+        if folder == '.':
+            results += map(lambda x: build_dir+'/'+x, glob.glob(ext))
+        else:
+            results += map(lambda x: build_dir+'/'+folder+'/'+x, glob.glob(ext))
+    return results
+
+for folder in src_folders:
+    folder_abs_path = os.path.abspath(folder)
+    os.chdir(folder_abs_path)
+    if folder == '.':
+        src_list += glob_for_extensions(ext_array, folder)
+    else:
+        src_list += glob_for_extensions(ext_array, folder)
+    os.chdir(BASE_DIR)
+
+src_list = [f for f in src_list if os.path.basename(f) not in ignore_files]
+
+print(src_list)
+
+############
+# CONFIGURE BUILD ENVIRONMENT
+# Set the build environment variables for building
+# For the curious add line to see full environment configuration
+#       print(local_env.Dump())
+############
+for pkg_config_cmd in pkg_config_commands:
+    local_env.ParseConfig(pkg_config_cmd)       # Auto parse pkg-config result
+
+local_env.Append(CPPFLAGS = compile_tflags)
+local_env.Append(LIBPATH = lib_path)           
+local_env.Append(LIBS = libs)                  
+local_env.Append(CPPPATH = cpp_paths)          
+local_env.Append(CXXFLAGS="-std=c++0x")
+local_env.Program(target_path, source=src_list)

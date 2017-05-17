@@ -1,0 +1,42 @@
+from subprocess import Popen, PIPE
+
+# Set the include directories for OpenCV. It tries to be smart by figuring out 
+# where the package is per system. This logic breaks if pkg-config is not 
+# installed on a persons PC
+p = Popen(['pkg-config --cflags --libs opencv'], 
+            shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+output, err = p.communicate()
+elements = output.split(' ')
+opencv_includes = [include for include in elements if '-I' in include]
+opencv_lib_paths = [include for include in elements if '-L' in include]
+
+for index in range(0, len(opencv_includes)):
+    if opencv_includes[index].startswith('-I'):
+        opencv_includes[index] = opencv_includes[index][len('-I'):]
+for index in range(0, len(opencv_lib_paths)):
+    if opencv_lib_paths[index].startswith('-L'):
+        opencv_lib_paths[index] = opencv_lib_paths[index][len('-L'):]
+
+# Grab the build config for compilation
+# Configs reaspberry pi build 0; mac build 1
+build_config = int(ARGUMENTS.get('build', 0))
+VALID_BUILD_CONFIGS = [0,1]
+if not (build_config in VALID_BUILD_CONFIGS):
+    print "Error: Build config %d not supported" % (build_config)
+    Exit(1)
+print '**** Compiling with build config: %d ****(pi: 0  mac: 1)' % (build_config)
+
+env = Environment()
+# Export variables for other scons files to utilize
+Export('env', 'build_config', 'opencv_includes', 'opencv_lib_paths')
+
+# Put all .sconsign files in one place
+env.SConsignFile()
+
+#specify the sconscript for example_cv
+project = 'example_cv'
+SConscript(project + '/sconscript', exports=['project'])
+
+#specify the sconscript for iris
+project = 'iris'
+SConscript(project + '/sconscript', exports=['project'])

@@ -1,0 +1,4 @@
+brew cask install java
+brew install openni2
+brew install glfw3
+brew install jpeg-turbo
